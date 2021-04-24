@@ -47,7 +47,6 @@ def convert_date(date,option):
     elif option == 2:
         monthDict ={'January':'1','February':'2','March':'3','April':'4','May':'5','June':'6','July':'7','August':'8','September':'9','October':'10','November':'11','December':'12'}
         date=date.split(" ")
-        print(date)
         date=monthDict[date[1]]+"/"+date[0]+"/"+date[-1][-2:]
         return date
 
@@ -56,7 +55,7 @@ death = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/ma
 recovered = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
 
 if last_update(confirmed) == last_update(death) == last_update(recovered):
-  st.write("Confirmed cases last updated on "+last_update(confirmed))
+  st.write("Data last updated on "+last_update(confirmed))
 else:  
   confirmed_update, death_update, recovered_update = st.beta_columns(3)
   confirmed_update.write("Confirmed cases last updated on "+last_update(confirmed))
