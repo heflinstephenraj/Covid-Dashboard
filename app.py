@@ -50,8 +50,33 @@ if st.checkbox('Show raw data'):
       st.write("Recovered")
       st.write(recovered)
 
+footer="""<style>
+a:link , a:visited{
+  color: blue;
+  background-color: transparent;
+  text-decoration: underline;
+}
 
+a:hover,  a:active {
+  color: red;
+  background-color: transparent;
+  text-decoration: underline;
+}
 
+.footer {
+  position: fixed;
+  padding: 10px;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: white;
+  color: black;
+  text-align: center;
+}
+</style>
 
-
-st.markdown("""<a style='display: block; text-align: center;' href="https://www.heflin.dev/">Developed with ❤ Heflin Stephen Raj S</a>""",unsafe_allow_html=True,)
+<div class="footer">
+  <p>Developed with ❤ by <a  text-align: center;' href="https://www.heflin.dev/" target="_blank">Heflin Stephen Raj S</a></p>
+</div>
+"""
+st.markdown(footer,unsafe_allow_html=True,)
