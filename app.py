@@ -1,15 +1,12 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from htbuilder.funcs import rgba, rgb
-
-
 
 st.set_page_config(page_title="Covid Dashboard", page_icon="🕸", layout='wide', initial_sidebar_state='expanded')
 
-head , data_info = st.beta_columns(2)
+data_info , data_update ,show_raw  = st.beta_columns(3)
 
-head.title("Covid Dashboard")
+
 data_info.write('Data is obtained from [JHU CSSE COVID-19 Data](https://github.com/CSSEGISandData/COVID-19)')
 hide_streamlit_style = """
             <style>
@@ -55,7 +52,7 @@ death = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/ma
 recovered = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
 
 if last_update(confirmed) == last_update(death) == last_update(recovered):
-  st.write("Data last updated on "+last_update(confirmed))
+  data_update.write("Data last updated on "+last_update(confirmed))
 else:  
   confirmed_update, death_update, recovered_update = st.beta_columns(3)
   confirmed_update.write("Confirmed cases last updated on "+last_update(confirmed))
@@ -64,7 +61,7 @@ else:
 
 country_option , empty, date_option  = st.beta_columns(3)
 
-if data_info.checkbox('Show raw data'):
+if show_raw.checkbox('Show raw data'):
     st.subheader('Raw data')
     option = st.selectbox('Please Select the type of data.',('Confirmed cases', 'Deaths', 'Recovered',"All"))
     if option == 'Confirmed cases':
@@ -97,7 +94,34 @@ else:
   
 
 
+header = """
+<style> 
+.header{
+    padding: 10px 20px; 
+    left: 0;
+    background: white; 
+    color: black; 
+    position:fixed;
+    width: 100%;
+    top:0;
+    } 
+.sticky{ 
+    position: fixed; 
+    top: 0; 
+    width: 100%;
+    } 
 
+</style>
+<div class="header" >
+<p style="font-size:20px"><b>
+Covid Dashboard
+</b>
+<p>
+</div>
+
+"""
+
+st.markdown(header, unsafe_allow_html=True)
 
 footer="""<style>
 a:link , a:visited{
@@ -117,6 +141,7 @@ a:hover,  a:active {
   padding: 10px;
   left: 0;
   bottom: 0;
+  border-top: solid;
   width: 100%;
   background-color: white;
   color: black;
@@ -124,8 +149,9 @@ a:hover,  a:active {
 }
 </style>
 
-<div class="footer">
-  <p>Developed with ❤ by <a  text-align: center;' href="https://www.heflin.dev/" target="_blank">Heflin Stephen Raj S</a></p>
+<div class="footer" id="footer">
+  <p><b>Developed with ❤ by <a  text-align: center;' href="https://www.heflin.dev/" target="_blank">Heflin Stephen Raj S</a></b></p>
 </div>
 """
 st.markdown(footer,unsafe_allow_html=True,)
+
