@@ -33,6 +33,18 @@ confirmed = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-1
 death = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
 recovered = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
 
+col1, col2, col3 = st.beta_columns(3)
+
+def last_update(data):
+  monthDict = {"1":'January', "2":'February',"3": 'March',"4": 'April', "5":'May',"6":'June', "7":'July', "8":'August', "9":'September', "10":'October', "11":'November',"12":'December'}
+  last_update = list(data.columns)[-1].split("/")
+  last_update = last_update[1]+" "+monthDict[last_update[0]]+" 20"+last_update[-1]
+  return last_update
+
+col1.write("Confirmed cases last updated on "+last_update(confirmed))
+col2.write("Death cases last updated on "+last_update(death))
+col3.write("Recovered cases last updated on "+last_update(recovered))
+
 if st.checkbox('Show raw data'):
     st.subheader('Raw data')
     option = st.selectbox('Please Select the type of data.',('Confirmed cases', 'Deaths', 'Recovered',"All"))
@@ -49,6 +61,8 @@ if st.checkbox('Show raw data'):
       st.write(death)
       st.write("Recovered")
       st.write(recovered)
+
+
 
 footer="""<style>
 a:link , a:visited{
