@@ -1,13 +1,10 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 
 st.set_page_config(page_title="Covid Dashboard", page_icon="🕸", layout='wide', initial_sidebar_state='expanded')
+col1 , col2 ,col3  = st.beta_columns(3)
+col1.write('Data is obtained from [JHU CSSE COVID-19 Data](https://github.com/CSSEGISandData/COVID-19)')
 
-data_info , data_update ,show_raw  = st.beta_columns(3)
-
-
-data_info.write('Data is obtained from [JHU CSSE COVID-19 Data](https://github.com/CSSEGISandData/COVID-19)')
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -16,6 +13,17 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
+def format_as_indian(value):
+    input_list = list(str(value))
+    if len(input_list) <= 1:
+        formatted_input = value
+    else:
+        first_number = input_list.pop(0)
+        last_number = input_list.pop()
+        formatted_input = first_number + ((''.join(l + ',' * (n % 2 == 1) for n, l in enumerate(reversed(input_list)))[::-1] + last_number))
+        if len(input_list) % 2 == 0:
+            formatted_input.lstrip(',')
+    return formatted_input
 
 @st.cache
 def fetch_data(url):
@@ -47,21 +55,34 @@ def convert_date(date,option):
         date=monthDict[date[1]]+"/"+date[0]+"/"+date[-1][-2:]
         return date
 
+def country_wise_data(data,column):
+    countries_list = []
+    total_cases_list = []
+    for i in data["country/region"]:
+        if i not in countries_list:
+            countries_list.append(i)
+            total_cases_list.append(sum(data[data["country/region"] == i][data.columns[-1]]))
+
+    country_wise_total_cases=pd.DataFrame(total_cases_list ,columns=[column], index=countries_list)
+    country_wise_total_cases=country_wise_total_cases.sort_values(column,ascending=False)
+    for i in country_wise_total_cases.index:
+        in_format = format_as_indian(country_wise_total_cases[column][i])
+        country_wise_total_cases[column][i] = in_format
+    return country_wise_total_cases
+
 confirmed = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
 death = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
 recovered = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
 
 if last_update(confirmed) == last_update(death) == last_update(recovered):
-  data_update.write("Data last updated on "+last_update(confirmed))
+  col2.write("Data last updated on **"+last_update(confirmed)+"**")
 else:  
   confirmed_update, death_update, recovered_update = st.beta_columns(3)
   confirmed_update.write("Confirmed cases last updated on "+last_update(confirmed))
   death_update.write("Death cases last updated on "+last_update(death))
   recovered_update.write("Recovered cases last updated on "+last_update(recovered))
 
-country_option , empty, date_option  = st.beta_columns(3)
-
-if show_raw.checkbox('Show raw data'):
+if col3.checkbox('Show raw data'):
     st.subheader('Raw data')
     option = st.selectbox('Please Select the type of data.',('Confirmed cases', 'Deaths', 'Recovered',"All"))
     if option == 'Confirmed cases':
@@ -78,26 +99,22 @@ if show_raw.checkbox('Show raw data'):
       st.write("Recovered")
       st.write(recovered)
 else:
-  dates = []
-  countries = []
-  for i in list(confirmed['country/region']):
-    if i not in countries:
-      countries.append(i)
-  country = country_option.selectbox('Please Select the Country',countries,help="Deisplay the data of selcted country")
-  for i in list(confirmed[confirmed['country/region']==country].columns)[4:]:
-    dates.append(convert_date(i,1))
-  date = date_option.select_slider("Select the date", options=dates, value=None,  key=None, help="Select the date to compare deaths, new cases and recovered cases")
-  date = convert_date(date,2)
-  st.write(f"Total active cases on {date} of {country}: {int(confirmed[confirmed['country/region']==country][date])}")
-  
-  
-  
+  col1.subheader("Global cases")
+  col1.write(format_as_indian(sum(confirmed[ confirmed.columns[-1]])))
+  col2.subheader("Global recoveries")
+  col2.write(format_as_indian(sum(recovered[recovered.columns[-1]])))
+  col3.subheader("Global deaths")
+  col3.write(format_as_indian(sum(death[death.columns[-1]])))
 
+  col1.write(country_wise_data(confirmed,"Cases"))
+  col2.write(country_wise_data(recovered,"Recovered"))
+  col3.write(country_wise_data(death,"Deaths"))
 
 header = """
 <style> 
 .header{
     padding: 10px 20px; 
+    box-shadow: 0px 2px 2px #c5c5c5;
     left: 0;
     background: white; 
     color: black; 
@@ -110,48 +127,15 @@ header = """
     top: 0; 
     width: 100%;
     } 
-
 </style>
 <div class="header" >
-<p style="font-size:20px"><b>
+<p style="font-size:20px">
 Covid Dashboard
-</b>
+Developed with ❤ by <a  text-align: center;' href="https://www.heflin.dev/" target="_blank">Heflin Stephen Raj S</a>
 <p>
 </div>
-
 """
 
 st.markdown(header, unsafe_allow_html=True)
 
-footer="""<style>
-a:link , a:visited{
-  color: blue;
-  background-color: transparent;
-  text-decoration: underline;
-}
-
-a:hover,  a:active {
-  color: red;
-  background-color: transparent;
-  text-decoration: underline;
-}
-
-.footer {
-  position: fixed;
-  padding: 10px;
-  left: 0;
-  bottom: 0;
-  border-top: solid;
-  width: 100%;
-  background-color: white;
-  color: black;
-  text-align: center;
-}
-</style>
-
-<div class="footer" id="footer">
-  <p><b>Developed with ❤ by <a  text-align: center;' href="https://www.heflin.dev/" target="_blank">Heflin Stephen Raj S</a></b></p>
-</div>
-"""
-st.markdown(footer,unsafe_allow_html=True,)
-
+st.write('Recovered cases for the US are not provided from JHU. [Click here](https://github.com/CSSEGISandData/COVID-19/issues/3464) to read about it.')
