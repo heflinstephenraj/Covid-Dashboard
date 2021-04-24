@@ -55,10 +55,13 @@ confirmed = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-1
 death = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
 recovered = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
 
-confirmed_update, death_update, recovered_update = st.beta_columns(3)
-confirmed_update.write("Confirmed cases last updated on "+last_update(confirmed))
-death_update.write("Death cases last updated on "+last_update(death))
-recovered_update.write("Recovered cases last updated on "+last_update(recovered))
+if last_update(confirmed) == last_update(death) == last_update(recovered):
+  st.write("Confirmed cases last updated on "+last_update(confirmed))
+else:  
+  confirmed_update, death_update, recovered_update = st.beta_columns(3)
+  confirmed_update.write("Confirmed cases last updated on "+last_update(confirmed))
+  death_update.write("Death cases last updated on "+last_update(death))
+  recovered_update.write("Recovered cases last updated on "+last_update(recovered))
 
 country_option , empty, date_option  = st.beta_columns(3)
 
