@@ -15,7 +15,7 @@ col1.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-
 
 hide_streamlit_style = """
             <style>
-            
+            #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             </style>
             """
