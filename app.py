@@ -119,3 +119,18 @@ else:
   col3.write(country_wise_data(death,"Deaths"))
 
 st.write('Recovered cases for the US are not provided from JHU. [Click here](https://github.com/CSSEGISandData/COVID-19/issues/3464) to read about it.')
+
+menu_html= """
+   <script language="Javascript">
+    window.onload=function(){
+    var mobile = (/iphone|ipad|ipod|android|blackberry|mini|windows\sce|palm/i.test(navigator.userAgent.toLowerCase()));
+    if (mobile) {
+        alert("Visit this on a Computer for Better View");              
+    } else {
+
+    }
+  }
+  </script>
+"""
+st.write("d")
+st.markdown(menu_html, unsafe_allow_html=True)
