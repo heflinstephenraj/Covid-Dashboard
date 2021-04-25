@@ -5,14 +5,14 @@ st.set_page_config(page_title="Covid Dashboard", page_icon="🕸", layout='wide'
 
 
 st.title("Covid Dashboard")
-st.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
 
 
+column_1 , column_2 , column_3 , column_4 = st.beta_columns(4)
 
 col1 , col2 ,col3  = st.beta_columns(3)
 
-col1.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
-
+column_2.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
+column_1.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -83,14 +83,14 @@ death = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/ma
 recovered = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
 
 if last_update(confirmed) == last_update(death) == last_update(recovered):
-  col2.write("Last updated: **"+last_update(confirmed)+"**")
+  column_3.write("Last updated: **"+last_update(confirmed)+"**")
 else:  
   confirmed_update, death_update, recovered_update = st.beta_columns(3)
   confirmed_update.write("Confirmed cases last updated on "+last_update(confirmed))
   death_update.write("Death cases last updated on "+last_update(death))
   recovered_update.write("Recovered cases last updated on "+last_update(recovered))
 
-if col3.checkbox('Show raw data'):
+if column_4.checkbox('Show raw data'):
     st.subheader('Raw data')
     option = st.selectbox('Please Select the type of data.',('Confirmed cases', 'Deaths', 'Recovered',"All"))
     if option == 'Confirmed cases':
