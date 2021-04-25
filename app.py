@@ -2,12 +2,20 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(page_title="Covid Dashboard", page_icon="🕸", layout='wide', initial_sidebar_state='expanded')
+
+
+st.title("Covid Dashboard")
+st.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
+
+
+
 col1 , col2 ,col3  = st.beta_columns(3)
-col1.write('Data is obtained from [JHU CSSE COVID-19 Data](https://github.com/CSSEGISandData/COVID-19)')
+
+col1.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
 
 hide_streamlit_style = """
             <style>
-            #MainMenu {visibility: hidden;}
+            
             footer {visibility: hidden;}
             </style>
             """
@@ -75,7 +83,7 @@ death = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/ma
 recovered = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
 
 if last_update(confirmed) == last_update(death) == last_update(recovered):
-  col2.write("Data last updated on **"+last_update(confirmed)+"**")
+  col2.write("Last updated: **"+last_update(confirmed)+"**")
 else:  
   confirmed_update, death_update, recovered_update = st.beta_columns(3)
   confirmed_update.write("Confirmed cases last updated on "+last_update(confirmed))
@@ -109,33 +117,5 @@ else:
   col1.write(country_wise_data(confirmed,"Cases"))
   col2.write(country_wise_data(recovered,"Recovered"))
   col3.write(country_wise_data(death,"Deaths"))
-
-header = """
-<style> 
-.header{
-    padding: 10px 20px; 
-    box-shadow: 0px 2px 2px #c5c5c5;
-    left: 0;
-    background: white; 
-    color: black; 
-    position:fixed;
-    width: 100%;
-    top:0;
-    } 
-.sticky{ 
-    position: fixed; 
-    top: 0; 
-    width: 100%;
-    } 
-</style>
-<div class="header" >
-<p style="font-size:20px">
-Covid Dashboard
-Developed with ❤ by <a  text-align: center;' href="https://www.heflin.dev/" target="_blank">Heflin Stephen Raj S</a>
-<p>
-</div>
-"""
-
-st.markdown(header, unsafe_allow_html=True)
 
 st.write('Recovered cases for the US are not provided from JHU. [Click here](https://github.com/CSSEGISandData/COVID-19/issues/3464) to read about it.')
