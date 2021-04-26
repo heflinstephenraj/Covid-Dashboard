@@ -72,7 +72,11 @@ def country_wise_data(data,column):
             total_cases_list.append(sum(data[data["country/region"] == i][data.columns[-1]]))
 
     country_wise_total_cases=pd.DataFrame(total_cases_list ,columns=[column], index=countries_list)
+    country_wise_total_cases["Countries"] = country_wise_total_cases.index
     country_wise_total_cases=country_wise_total_cases.sort_values(column,ascending=False)
+    country_wise_total_cases.index = range(1,len(country_wise_total_cases)+1)
+    first_column = country_wise_total_cases.pop(column)
+    country_wise_total_cases.insert(1, column, first_column)
     for i in country_wise_total_cases.index:
         in_format = format_as_indian(country_wise_total_cases[column][i])
         country_wise_total_cases[column][i] = in_format
