@@ -2,4 +2,4 @@
 
 Coronavirus live dashboard developed in Streamlit
 
-Check out at heflin.dev/covid
+Check out at https://www.heflin.dev/covid
