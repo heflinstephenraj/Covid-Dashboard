@@ -7,7 +7,7 @@ st.set_page_config(page_title="Covid Dashboard", page_icon="🕸", layout='wide'
 st.title("Covid Dashboard")
 
 
-column_1 , column_2 , column_3 , column_4 = st.beta_columns(4)
+column_1 , column_2 , column_3 , column_4 = st.beta_columns((2, 1, 1, 1))
 
 col1 , col2 ,col3  = st.beta_columns(3)
 
