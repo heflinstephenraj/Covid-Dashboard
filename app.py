@@ -119,7 +119,7 @@ else:
   col3.write(format_as_indian(sum(death[death.columns[-1]])))
 
   col1.write(country_wise_data(confirmed,"Cases"))
-  col2.write(country_wise_data(recovered,"Recovered"))
+  col2.write(country_wise_data(recovered,"Recoveries"))
   col3.write(country_wise_data(death,"Deaths"))
 
 st.write('Recovered cases for the US are not provided from JHU. [Click here](https://github.com/CSSEGISandData/COVID-19/issues/3464) to read about it.')
