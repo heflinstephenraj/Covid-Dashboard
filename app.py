@@ -4,7 +4,7 @@ from fake_useragent.utils import get
 import streamlit as st
 import pandas as pd
 import requests
-
+from fake_useragent import UserAgent
 
 st.set_page_config(page_title="Covid Dashboard", page_icon="🕸", layout='wide', initial_sidebar_state='expanded')
 
@@ -70,10 +70,11 @@ def get_vaccination(date,pincode,fee,age):
     age_select = 45
   date=str(date).split("-")
   date=date[-1]+"-"+date[1]+"-"+date[0]
-  header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'}
+  ua = UserAgent()
+  header = {'User-Agent':str(ua.chrome)}
   data=requests.get(f"https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}",headers=header)
   if not data:
-      st.write(data)
+    st.write(data)
   data = data.json()
   if not data["sessions"]:
     return "No"
