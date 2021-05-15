@@ -73,6 +73,8 @@ def get_vaccination(date,pincode,fee,age):
   ua = UserAgent()
   header = {'User-Agent':str(ua.chrome)}
   data=requests.get(f"https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}",headers=header)
+  if not data:
+      st.write(data)
   data = data.json()
   if not data["sessions"]:
     return "No"
