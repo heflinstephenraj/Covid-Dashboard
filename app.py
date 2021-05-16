@@ -3,6 +3,9 @@ from time import time_ns
 from fake_useragent.utils import get
 import streamlit as st
 import pandas as pd
+import datetime
+import plotly.express as px
+import plotly.graph_objects as go
 import requests
 from fake_useragent import UserAgent
 
@@ -19,10 +22,10 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 pd.options.mode.chained_assignment=None
 
-option_1,option_2 = "Covid Global dashboard","Covid Vaccination (India)"
+option_1,option_2,option_3 = "Covid Global dashboard","Covid Vaccination (India)","Covid Inida dashboard"
 dashboard_options = st.sidebar.selectbox(
     "How would you like to be contacted?",
-    (option_1,option_2)
+    (option_1,option_2,option_3)
 )
 
 if dashboard_options == option_1:
@@ -57,11 +60,17 @@ def fetch_data(url):
   data.columns=columns
   return data
 
-def last_update(data):
+def last_update(data,option=1):
+  
   monthDict = {"1":'January', "2":'February',"3": 'March',"4": 'April', "5":'May',"6":'June', "7":'July', "8":'August', "9":'September', "10":'October', "11":'November',"12":'December'}
-  last_update = list(data.columns)[-1].split("/")
-  last_update = last_update[1]+" "+monthDict[last_update[0]]+" 20"+last_update[-1]
-  return last_update
+  if option == 1:
+    last_update = list(data.columns)[-1].split("/")
+    last_update = last_update[1]+" "+monthDict[last_update[0]]+" 20"+last_update[-1]
+    return last_update
+  else:
+    month=data.split("-")[0]
+    last_update = data.split("-")[1]+" "+monthDict[str(int(month))]+" 20"+data.split("-")[-1]
+    return last_update
 
 def get_vaccination(date,pincode,fee,age):
   if age == '18-45':
@@ -212,3 +221,40 @@ if dashboard_options == option_2:
       vaccine.text(i["Vaccine"])
       address.text(i["Address"])
       
+if dashboard_options == option_3:
+  st.title("Covid India dashboard")
+  col1,col2,col3=st.beta_columns(3)
+  col1.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
+  try:
+    date=str(datetime.datetime.now()).split(" ")[0].split("-")
+    date=date[1]+"-"+date[-1]+"-"+date[0]
+    url = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv"
+    data=fetch_data(url)
+  except:
+    date=str(datetime.datetime.now()).split(" ")[0].split("-")
+    if len(str(int(date[-1])+1)) == 1:
+        date=str(date[1])+"-"+"0"+str(int(date[-1])+1)+"-"+str(date[0])
+    else:    
+        date=str(date[1])+"-"+str(int(date[-1])-1)+"-"+str(date[0])
+    url = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv"
+    data=fetch_data(url)
+    data=data[data["country_region"]=="India"]
+    data=data.sort_values(by="confirmed",ascending=False)
+    states=st.multiselect("Select States",list(data["province_state"]),default=list(data["province_state"])[:5])
+    state_data=[]
+    for i in states:
+      for j in range(len(data)):
+        if i == data.iloc[j]["province_state"]:
+          state_data.append(dict(data.iloc[j]))
+    state_data=pd.DataFrame(state_data)
+    col2.write(f"Last Updated: **{last_update(date,2)}**")
+    col3.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
+    if states:
+      fig = px.pie(state_data, values=state_data['confirmed'], names=state_data['province_state'], title='Total Confirmed Cases')
+      st.plotly_chart(fig)
+      
+      fig = go.Figure(data=[
+        go.Bar(name='Confirmed', x=state_data['province_state'], y=state_data['confirmed']),
+        go.Bar(name='Recovered', x=state_data['province_state'], y=state_data['recovered']),
+        go.Bar(name='Active', x=state_data['province_state'], y=state_data['active'])])
+      st.plotly_chart(fig)
