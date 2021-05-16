@@ -32,8 +32,8 @@ if dashboard_options == option_1:
   st.title("Covid Dashboard")
   column_1 , column_2 , column_3 , column_4 = st.beta_columns((2, 1, 1, 1))
   col1 , col2 ,col3  = st.beta_columns(3)
-  column_2.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
-  column_1.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
+  st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
+  st.sidebar.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
 
 
 def format_as_indian(value):
@@ -139,12 +139,12 @@ if dashboard_options == option_1:
   recovered = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
 
   if last_update(confirmed) == last_update(death) == last_update(recovered):
-    column_3.write("Last updated: **"+last_update(confirmed)+"**")
+    st.sidebar.write("Last updated: **"+last_update(confirmed)+"**")
   else:  
     confirmed_update, death_update, recovered_update = st.beta_columns(3)
-    confirmed_update.write("Confirmed cases last updated on "+last_update(confirmed))
-    death_update.write("Death cases last updated on "+last_update(death))
-    recovered_update.write("Recovered cases last updated on "+last_update(recovered))
+    st.sidebar.write("Confirmed cases last updated on "+last_update(confirmed))
+    st.sidebar.write("Death cases last updated on "+last_update(death))
+    st.sidebar.write("Recovered cases last updated on "+last_update(recovered))
 
 if dashboard_options == option_1:
   if column_4.checkbox('Show raw data'):
@@ -223,8 +223,8 @@ if dashboard_options == option_2:
       
 if dashboard_options == option_3:
   st.title("Covid India dashboard")
-  col1,col2,col3=st.beta_columns(3)
-  col1.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
+  
+  st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
   try:
     date=str(datetime.datetime.now()).split(" ")[0].split("-")
     date=date[1]+"-"+date[-1]+"-"+date[0]
@@ -247,8 +247,8 @@ if dashboard_options == option_3:
         if i == data.iloc[j]["province_state"]:
           state_data.append(dict(data.iloc[j]))
     state_data=pd.DataFrame(state_data)
-    col2.write(f"Last Updated: **{last_update(date,2)}**")
-    col3.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
+    st.sidebar.write(f"Last Updated: **{last_update(date,2)}**")
+    st.sidebar.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
     if states:
       fig = px.pie(state_data, values=state_data['confirmed'], names=state_data['province_state'], title='Total Confirmed Cases')
       st.plotly_chart(fig)
