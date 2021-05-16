@@ -81,10 +81,11 @@ def get_vaccination(date,pincode,fee,age):
   date=date[-1]+"-"+date[1]+"-"+date[0]
   ua = UserAgent()
   header = {'User-Agent':str(ua.chrome)}
-  data=requests.get(f"https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}",headers=header)
-  if not data:
-    st.write(data)
-  data = data.json()
+  try:
+    data=requests.get(f"https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}",headers=header)
+    data = data.json()
+  except:
+    st.warning("Heroku requires Credit card details to use User-Agent in requesting the data from Cowin API. So Vaccination functionality is not available on the live website, But It works fine on the local machine.")
   if not data["sessions"]:
     return "No"
   final = []
@@ -180,7 +181,7 @@ if dashboard_options == option_1:
 
 if dashboard_options == option_2:
   st.title(option_2)
-  st.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
+  st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
   
   col1 , col2 ,col3, col4  = st.beta_columns(4)
   
