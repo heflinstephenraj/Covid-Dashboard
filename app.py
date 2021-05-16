@@ -86,6 +86,7 @@ def get_vaccination(date,pincode,fee,age):
     data = data.json()
   except:
     st.warning("Heroku requires Credit card details to use User-Agent in requesting the data from Cowin API. So Vaccination functionality is not available on the live website, But It works fine on the local machine.")
+    return "No"
   if not data["sessions"]:
     return "No"
   final = []
