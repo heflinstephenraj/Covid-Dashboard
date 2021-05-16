@@ -1,5 +1,7 @@
+from hashlib import new
 from os.path import join
 from time import time_ns
+import numpy as np
 from fake_useragent.utils import get
 import streamlit as st
 import pandas as pd
@@ -7,6 +9,7 @@ import datetime
 import plotly.express as px
 import plotly.graph_objects as go
 import requests
+import datetime 
 from fake_useragent import UserAgent
 
 st.set_page_config(page_title="Covid Dashboard", page_icon="🕸", layout='wide', initial_sidebar_state='expanded')
@@ -53,7 +56,7 @@ def fetch_data(url):
   data = pd.read_csv(url)
   columns = []
   for i in list(data.columns):
-    if i.lower() == "long":
+    if i.lower() == "long" or i.lower() == "long_":
       columns.append("lon")
     else:
       columns.append(i.lower())
@@ -225,8 +228,79 @@ if dashboard_options == option_2:
       
 if dashboard_options == option_3:
   st.title("Covid India dashboard")
-  
   st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
+  
+  confirmed = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
+  confirmed_india=confirmed[confirmed["country/region"]=="India"]
+  orginal_confirmed_column = list(confirmed_india.columns)[-60:]
+  data=confirmed_india[orginal_confirmed_column].T
+  data.columns = ["Confirmed"]
+  last=list(confirmed.columns[-60:])
+  new_case_list=[]
+  for i in range(len(orginal_confirmed_column)):
+      if last[0]==orginal_confirmed_column[i]:
+          add_date=orginal_confirmed_column[i-1]
+  for i in range(len(last)):
+      if i == 0:
+          columns = list(confirmed.columns)
+          for j in range(len(columns)):
+            if columns[j] == last[0]:
+              new_case=int(abs(confirmed[confirmed["country/region"]=="India"][columns[j-1]]-confirmed_india[last[0]]))
+              new_case_list.append({"New cases":new_case})
+      else:
+          new_case=int(abs(data.loc[last[i-1]]-data.loc[last[i]]))
+          new_case_list.append({"New cases":new_case})
+  new_cases_data=pd.DataFrame(new_case_list,index=last)
+  new_cases_data.index= pd.to_datetime(new_cases_data.index)
+  st.write(f"New confirmed cases from {last[0]} to {last[-1]} (60 days)")
+  chart = st.line_chart(new_cases_data)
+
+  deaths = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
+  deaths_india=deaths[deaths["country/region"]=="India"]
+  orginal_confirmed_column = list(deaths_india.columns)[-60:]
+  data=deaths_india[orginal_confirmed_column].T
+  data.columns = ["Deaths"]
+  last=list(confirmed.columns[-60:])
+  new_case_list=[]
+  for i in range(len(orginal_confirmed_column)):
+      if last[0]==orginal_confirmed_column[i]:
+          add_date=orginal_confirmed_column[i-1]
+  for i in range(len(last)):
+      if i == 0:
+          columns = list(deaths.columns)
+          for j in range(len(columns)):
+            if columns[j] == last[0]:
+              new_case=int(abs(deaths[deaths["country/region"]=="India"][columns[j-1]]-deaths_india[last[0]]))
+              new_case_list.append({"New Deaths":new_case})
+      else:
+          new_case=int(abs(data.loc[last[i-1]]-data.loc[last[i]]))
+          new_case_list.append({"New Deaths":new_case})
+  new_deaths_data=pd.DataFrame(new_case_list,index=last)
+  new_deaths_data.index= pd.to_datetime(new_cases_data.index)
+  st.write(f"New deaths from {last[0]} to {last[-1]} (60 days)")
+  chart = st.line_chart(new_deaths_data)
+
+  recovered = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
+  recovered_india=recovered[recovered["country/region"]=="India"]
+  orginal_confirmed_column = list(recovered_india.columns)[-60:]
+  data=recovered_india[orginal_confirmed_column].T
+  data.columns = ["recovered"]
+  last=list(recovered.columns[-60:])
+  new_case_list=[]
+  for i in range(len(last)):
+      if i == 0:
+          columns = list(recovered.columns)
+          for j in range(len(columns)): 
+              if columns[j] == last[0]:
+                  new_case=int(abs(recovered[recovered["country/region"]=="India"][columns[j-1]]-recovered_india[last[0]]))
+                  new_case_list.append({"New recovered cases":new_case})
+      else:
+          new_case=int(abs(data.loc[last[i-1]]-data.loc[last[i]]))
+          new_case_list.append({"New recovered cases":new_case})
+  new_recovered_data=pd.DataFrame(new_case_list,index=last)
+  new_recovered_data.index= pd.to_datetime(new_recovered_data.index)
+  st.write(f"New recovered cases from {last[0]} to {last[-1]} (60 days)")
+  chart = st.line_chart(new_recovered_data)
   try:
     date=str(datetime.datetime.now()).split(" ")[0].split("-")
     date=date[1]+"-"+date[-1]+"-"+date[0]
