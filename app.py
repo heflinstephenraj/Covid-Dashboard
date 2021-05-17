@@ -123,7 +123,7 @@ def convert_date(date,option):
         date=monthDict[date[1]]+"/"+date[0]+"/"+date[-1][-2:]
         return date
 
-def country_wise_data(data,column):
+def country_wise_data(data,column,format_IN=True):
     countries_list = []
     total_cases_list = []
     for i in data["country/region"]:
@@ -138,8 +138,11 @@ def country_wise_data(data,column):
     first_column = country_wise_total_cases.pop(column)
     country_wise_total_cases.insert(1, column, first_column)
     for i in country_wise_total_cases.index:
+      if format_IN:
         in_format = format_as_indian(country_wise_total_cases[column][i])
-        country_wise_total_cases[column][i] = in_format
+      else:
+        in_format=country_wise_total_cases[column][i]
+      country_wise_total_cases[column][i] = in_format
     return country_wise_total_cases
 
 if dashboard_options == option_1 or dashboard_options == option_3:
@@ -163,6 +166,13 @@ if dashboard_options == option_1:
   col2.write(format_as_indian(sum(recovered[recovered.columns[-1]])))
   col3.subheader("Global deaths")
   col3.write(format_as_indian(sum(death[death.columns[-1]])))
+  
+  col1.subheader("New confirmed cases")
+  col1.write(format_as_indian(int(abs(sum(confirmed[confirmed.columns[-2]]) - sum(confirmed[confirmed.columns[-1]]) ))))
+  col2.subheader("New deaths")
+  col2.write(format_as_indian(int(abs(sum(death[death.columns[-2]]) - sum(death[death.columns[-1]]) ))))
+  col3.subheader("New recoveries")
+  col3.write(format_as_indian(int(abs(sum(recovered[recovered.columns[-2]]) - sum(recovered[recovered.columns[-1]]) ))))
 
   col1.write(country_wise_data(confirmed,"Cases"))
   col2.write(country_wise_data(recovered,"Recoveries"))
