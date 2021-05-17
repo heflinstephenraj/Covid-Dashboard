@@ -350,15 +350,26 @@ if dashboard_options == option_3:
       for j in range(len(data)):
         if i == data.iloc[j]["province_state"]:
           state_data.append(dict(data.iloc[j]))
-    state_data=pd.DataFrame(state_data)
+    state_data=pd.DataFrame(state_data).sort_values("confirmed",ascending=False)
+
     st.sidebar.write(f"Last Updated: **{last_update(date,2)}**")
     st.sidebar.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
     if states:
-      fig = px.pie(state_data, values=state_data['confirmed'], names=state_data['province_state'], title='Total Confirmed Cases')
-      st.plotly_chart(fig)
-      
+      viz1,viz2=st.beta_columns(2)
+      fig = px.pie(state_data, values=state_data['confirmed'], names=state_data['province_state'], title='Total Confirmed Cases',width=500,height=500)
+      viz2.plotly_chart(fig)
+      layout = go.Layout(autosize=False,width=500,height=500,xaxis= go.layout.XAxis(linecolor = 'black',linewidth = 1,mirror = True),yaxis= go.layout.YAxis(linecolor = 'black',linewidth = 1,mirror = True),margin=go.layout.Margin(l=50,r=50,b=100,t=100,pad = 4))
       fig = go.Figure(data=[
         go.Bar(name='Confirmed', x=state_data['province_state'], y=state_data['confirmed']),
         go.Bar(name='Recovered', x=state_data['province_state'], y=state_data['recovered']),
-        go.Bar(name='Active', x=state_data['province_state'], y=state_data['active'])])
-      st.plotly_chart(fig)
+        go.Bar(name='Active', x=state_data['province_state'], y=state_data['active'])],
+        layout=layout)
+      fig.update_layout(
+        title=f'Comparison of {last_update(date,2)}',
+        xaxis_tickfont_size=12,
+        yaxis=dict(title="No. of people",titlefont_size=16,tickfont_size=14,),
+        legend=dict(x=0.70,y=1.00),
+        barmode='group',
+        bargap=0.15, 
+        bargroupgap=0.1)
+      viz1.plotly_chart(fig)
