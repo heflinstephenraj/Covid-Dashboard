@@ -1,6 +1,7 @@
 from hashlib import new
 from os.path import join
 from time import time_ns
+from altair.vegalite.v4.schema.channels import Color
 import numpy as np
 from fake_useragent.utils import get
 import streamlit as st
@@ -155,36 +156,19 @@ if dashboard_options == option_1:
     st.sidebar.write("Death cases last updated on "+last_update(death))
     st.sidebar.write("Recovered cases last updated on "+last_update(recovered))
 
-if dashboard_options == option_1:
-  if column_4.checkbox('Show raw data'):
-      st.subheader('Raw data')
-      option = st.selectbox('Please Select the type of data.',('Confirmed cases', 'Deaths', 'Recovered',"All"))
-      if option == 'Confirmed cases':
-        st.write(confirmed)
-      elif option == "Deaths":
-        st.write(death)
-      elif option == "Recovered":
-        st.write(recovered)
-      elif option == "All":
-        st.write("Confirmed Case")
-        st.write(confirmed)
-        st.write("Deaths")
-        st.write(death)
-        st.write("Recovered")
-        st.write(recovered)
-  else:
-    col1.subheader("Global cases")
-    col1.write(format_as_indian(sum(confirmed[ confirmed.columns[-1]])))
-    col2.subheader("Global recoveries")
-    col2.write(format_as_indian(sum(recovered[recovered.columns[-1]])))
-    col3.subheader("Global deaths")
-    col3.write(format_as_indian(sum(death[death.columns[-1]])))
 
-    col1.write(country_wise_data(confirmed,"Cases"))
-    col2.write(country_wise_data(recovered,"Recoveries"))
-    col3.write(country_wise_data(death,"Deaths"))
+  col1.subheader("Global cases")
+  col1.write(format_as_indian(sum(confirmed[ confirmed.columns[-1]])))
+  col2.subheader("Global recoveries")
+  col2.write(format_as_indian(sum(recovered[recovered.columns[-1]])))
+  col3.subheader("Global deaths")
+  col3.write(format_as_indian(sum(death[death.columns[-1]])))
 
-  st.write('Recovered cases for the US are not provided from JHU. [Click here](https://github.com/CSSEGISandData/COVID-19/issues/3464) to read about it.')
+  col1.write(country_wise_data(confirmed,"Cases"))
+  col2.write(country_wise_data(recovered,"Recoveries"))
+  col3.write(country_wise_data(death,"Deaths"))
+
+  st.sidebar.write('Recovered cases for the US are not provided from JHU. [Click here](https://github.com/CSSEGISandData/COVID-19/issues/3464) to read about it.')
 
 
 if dashboard_options == option_2:
@@ -356,7 +340,7 @@ if dashboard_options == option_3:
     st.sidebar.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
     if states:
       viz1,viz2=st.beta_columns(2)
-      fig = px.pie(state_data, values=state_data['confirmed'], names=state_data['province_state'], title='Total Confirmed Cases',width=500,height=500)
+      fig = px.pie(state_data, values=state_data['confirmed'], names=state_data['province_state'], title=f'Total Confirmed Cases of {last_update(date,2)}',width=500,height=500)
       viz2.plotly_chart(fig)
       layout = go.Layout(autosize=False,width=500,height=500,xaxis= go.layout.XAxis(linecolor = 'black',linewidth = 1,mirror = True),yaxis= go.layout.YAxis(linecolor = 'black',linewidth = 1,mirror = True),margin=go.layout.Margin(l=50,r=50,b=100,t=100,pad = 4))
       fig = go.Figure(data=[
