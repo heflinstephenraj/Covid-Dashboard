@@ -92,7 +92,7 @@ def get_vaccination(date,pincode,fee,age):
     data=requests.get(f"https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}",headers=header)
     data = data.json()
   except:
-    st.warning("Heroku requires Credit card details to use User-Agent in requesting the data from Cowin API. So Vaccination functionality is not available on the live website, But It works fine on the local machine.")
+    st.warning("This website is hosted on the Heroku European Free server. For security reasons, The Offical Indian Gov API (Cowin) is blocking the request from outside of India. So The vaccination functionality is not working on the live website.")
     return "No"
   if not data["sessions"]:
     return "No"
@@ -268,13 +268,7 @@ if dashboard_options == option_3:
   st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
   
   
-  #Confirmed New Cases
   confirmed = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
-  
-  
-
-  
-  
   
   col1,col2,col3=st.beta_columns(3)
   col1.subheader("Confirmed cases")
