@@ -23,14 +23,34 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-
 pd.options.mode.chained_assignment=None
 
+def new_cases_global(data,days=False,column_name=None):
+  if not days:
+    days=len(data)
+  orginal_data_column = list(data.columns)[-days:]
+  edited_data=data[orginal_data_column].T
+  last=list(data.columns[-days:])
+  new_case_list=[]
+  for i in range(len(orginal_data_column)):
+    if last[0]==orginal_data_column[i]:
+      add_date=orginal_data_column[i-1]
+  for i in range(len(last)):
+    if i == 0:
+      columns = list(data.columns)
+      for j in range(len(columns)):
+        if columns[j] == last[0]:
+          new_case = int(abs(sum(data[columns[j-1]]) - sum(data[last[0]])))
+          new_case_list.append({column_name:new_case})
+    else:
+      new_case = int(abs(sum(edited_data.loc[last[i-1]])-sum(edited_data.loc[last[i]])))
+      new_case_list.append({column_name:new_case})
+  new_cases_data=pd.DataFrame(new_case_list,index=last)
+  new_cases_data.index= pd.to_datetime(new_cases_data.index)
+  return new_cases_data
+
 option_1,option_2,option_3 = "Covid Global dashboard","Covid Vaccination (India)","Covid Inida dashboard"
-dashboard_options = st.sidebar.selectbox(
-    "How would you like to be contacted?",
-    (option_1,option_2,option_3)
-)
+dashboard_options = st.sidebar.selectbox("How would you like to be contacted?",(option_1,option_2,option_3))
 
 if dashboard_options == option_1:
   st.title("Covid Dashboard")
@@ -38,7 +58,6 @@ if dashboard_options == option_1:
   col1 , col2 ,col3  = st.beta_columns(3)
   st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
   st.sidebar.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
-
 
 def format_as_indian(value):
     input_list = list(str(value))
@@ -65,7 +84,6 @@ def fetch_data(url):
   return data
 
 def last_update(data,option=1):
-  
   monthDict = {"1":'January', "2":'February',"3": 'March',"4": 'April', "5":'May',"6":'June', "7":'July', "8":'August', "9":'September', "10":'October', "11":'November',"12":'December'}
   if option == 1:
     last_update = list(data.columns)[-1].split("/")
@@ -109,7 +127,32 @@ def get_vaccination(date,pincode,fee,age):
   if not final:
     return "No"
   return final
-  
+
+def new_data(data,days=False,column_name=None):
+  if not days:
+    days=len(data)
+  data_india=data[data["country/region"]=="India"]
+  orginal_data_column = list(data_india.columns)[-days:]
+  edited_data=data_india[orginal_data_column].T
+  edited_data.columns = ["Confirmed"]
+  last=list(data.columns[-days:])
+  new_case_list=[]
+  for i in range(len(orginal_data_column)):
+    if last[0]==orginal_data_column[i]:
+      add_date=orginal_data_column[i-1]
+  for i in range(len(last)):
+    if i == 0:
+      columns = list(data.columns)
+      for j in range(len(columns)):
+        if columns[j] == last[0]:
+          new_case=int(abs(data[data["country/region"]=="India"][columns[j-1]]-data_india[last[0]]))
+          new_case_list.append({column_name:new_case})
+    else:
+      new_case=int( abs( edited_data.loc[last[i-1]] - edited_data.loc[last[i]] ) )
+      new_case_list.append({column_name:new_case})
+  new_cases_data=pd.DataFrame(new_case_list,index=last)
+  new_cases_data.index= pd.to_datetime(new_cases_data.index)
+  return new_cases_data
 
 def convert_date(date,option):
     if option == 1:
@@ -133,7 +176,6 @@ def convert_date(date,option):
         date=date.split("-")
       date = date[-1]+" "+monthDict[str(int(date[1]))]+" "+date[0]
       return date
-      
 
 def country_wise_data(data,column,format_IN=True):
     countries_list = []
@@ -142,7 +184,6 @@ def country_wise_data(data,column,format_IN=True):
         if i not in countries_list:
             countries_list.append(i)
             total_cases_list.append(sum(data[data["country/region"] == i][data.columns[-1]]))
-
     country_wise_total_cases=pd.DataFrame(total_cases_list ,columns=[column], index=countries_list)
     country_wise_total_cases["Countries"] = country_wise_total_cases.index
     country_wise_total_cases=country_wise_total_cases.sort_values(column,ascending=False)
@@ -171,7 +212,6 @@ if dashboard_options == option_1:
     st.sidebar.write("Death cases last updated on "+last_update(death))
     st.sidebar.write("Recovered cases last updated on "+last_update(recovered))
 
-
   col1.subheader("Global cases")
   col1.write(format_as_indian(sum(confirmed[ confirmed.columns[-1]])))
   col2.subheader("Global recoveries")
@@ -185,13 +225,22 @@ if dashboard_options == option_1:
   col2.write(format_as_indian(int(abs(sum(death[death.columns[-2]]) - sum(death[death.columns[-1]]) ))))
   col3.subheader("New recoveries")
   col3.write(format_as_indian(int(abs(sum(recovered[recovered.columns[-2]]) - sum(recovered[recovered.columns[-1]]) ))))
-
-  col1.write(country_wise_data(confirmed,"Cases"))
-  col2.write(country_wise_data(recovered,"Recoveries"))
-  col3.write(country_wise_data(death,"Deaths"))
-
   st.sidebar.write('Recovered cases for the US are not provided from JHU. [Click here](https://github.com/CSSEGISandData/COVID-19/issues/3464) to read about it.')
-
+  no_days = st.slider("No. of days", min_value=5, max_value=len(new_cases_global(confirmed)), value=60)
+  
+  new_cases_data=new_cases_global(confirmed,no_days,"New cases")
+  start_date = str(new_cases_data.index[0]).split(" ")[0]
+  end_date = str(new_cases_data.index[-1]).split(" ")[0]
+  start_date = convert_date(start_date,3)
+  end_date = convert_date(end_date,3) 
+  st.write(f"New confirmed cases from **{start_date}** to **{end_date}** ({no_days} days)")
+  chart = st.line_chart(new_cases_data)
+  new_deaths_data = new_cases_global(death,no_days,"New deaths")
+  st.write(f"New deaths from **{start_date}** to **{end_date}** ({no_days} days)")
+  chart = st.line_chart(new_deaths_data)
+  new_deaths_data = new_cases_global(recovered,no_days,"New recoveries")
+  st.write(f"New recoveries from **{start_date}** to **{end_date}** ({no_days} days)")
+  chart = st.line_chart(new_deaths_data)
 
 if dashboard_options == option_2:
   st.title(option_2)
@@ -230,43 +279,11 @@ if dashboard_options == option_2:
       result["Vaccine"]= i["Vaccine"]
       result["Address"] = i["Address"]
       vaccination_list.append(result)
-    st.table(pd.DataFrame(vaccination_list,index=range(1,len(vaccination_list)+1)))
-    
+    st.table(pd.DataFrame(vaccination_list,index=range(1,len(vaccination_list)+1)))   
 
 if dashboard_options == option_3:
-  
-  def new_data(data,days=False):
-    if not days:
-      days=len(data)
-    data_india=data[data["country/region"]=="India"]
-    orginal_data_column = list(data_india.columns)[-days:]
-    edited_data=data_india[orginal_data_column].T
-    edited_data.columns = ["Confirmed"]
-    last=list(data.columns[-days:])
-    new_case_list=[]
-    for i in range(len(orginal_data_column)):
-      if last[0]==orginal_data_column[i]:
-        add_date=orginal_data_column[i-1]
-    for i in range(len(last)):
-      if i == 0:
-        columns = list(data.columns)
-        for j in range(len(columns)):
-          if columns[j] == last[0]:
-            new_case=int(abs(data[data["country/region"]=="India"][columns[j-1]]-data_india[last[0]]))
-            new_case_list.append({"New cases":new_case})
-      else:
-        new_case=int( abs( edited_data.loc[last[i-1]] - edited_data.loc[last[i]] ) )
-        new_case_list.append({"New cases":new_case})
-    new_cases_data=pd.DataFrame(new_case_list,index=last)
-    new_cases_data.index= pd.to_datetime(new_cases_data.index)
-    return new_cases_data
-
-
-
-  
   st.title("Covid India dashboard")
   st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
-  
   
   confirmed = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
   
@@ -287,22 +304,22 @@ if dashboard_options == option_3:
   new_recovered_data=new_data(recovered,len(confirmed))
   col3.write(format_as_indian(int(new_recovered_data.loc[new_recovered_data.index[-1]])))
   
-  no_days = st.slider("No. of days", min_value=5, max_value=len(new_data(confirmed)), value=60)
+  no_days_in = st.slider("No. of days", min_value=5, max_value=len(new_data(confirmed)), value=60)
 
-  new_cases_data=new_data(confirmed,no_days)
+  new_cases_data=new_data(confirmed,no_days_in,"New cases")
   start_date = str(new_cases_data.index[0]).split(" ")[0]
   end_date = str(new_cases_data.index[-1]).split(" ")[0]
   start_date = convert_date(start_date,3)
   end_date = convert_date(end_date,3) 
-  st.write(f"New confirmed cases from **{start_date}** to **{end_date}** ({no_days} days)")
+  st.write(f"New confirmed cases from **{start_date}** to **{end_date}** ({no_days_in} days)")
   chart = st.line_chart(new_cases_data)
 
-  new_cases_data=new_data(death,no_days)
-  st.write(f"New deaths from **{start_date}** to **{end_date}** ({no_days} days)")
+  new_cases_data=new_data(death,no_days_in,"New deaths")
+  st.write(f"New deaths from **{start_date}** to **{end_date}** ({no_days_in} days)")
   chart = st.line_chart(new_cases_data)
 
-  new_cases_data=new_data(recovered,no_days)
-  st.write(f"New recovered cases from **{start_date}** to **{end_date}** ({no_days} days)")
+  new_cases_data=new_data(recovered,no_days_in,"New recoveries")
+  st.write(f"New recovered cases from **{start_date}** to **{end_date}** ({no_days_in} days)")
   chart = st.line_chart(new_cases_data)
   try:
     date=str(datetime.datetime.now()).split(" ")[0].split("-")
@@ -348,4 +365,3 @@ if dashboard_options == option_3:
         bargap=0.15, 
         bargroupgap=0.1)
       viz1.plotly_chart(fig)
-      
