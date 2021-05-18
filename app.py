@@ -242,6 +242,49 @@ if dashboard_options == option_1:
   st.write(f"New recoveries from **{start_date}** to **{end_date}** ({no_days} days)")
   chart = st.line_chart(new_deaths_data)
 
+  
+  selected_countries = st.multiselect("Select countries to compare",list(set(confirmed["country/region"])),default=list(country_wise_data(confirmed,"cases")["Countries"][:5]))
+  viz1,viz2=st.beta_columns(2)
+  country_confirmed =  country_wise_data(confirmed,"Confirmed",False)
+  country_death =  country_wise_data(death,"Death",False)
+  country_recovered =  country_wise_data(recovered,"Recovered",False)
+  bar_chart_countries = []
+  
+  for j in selected_countries:
+    result={}
+    for i in range(len(country_confirmed)):
+      if country_confirmed.iloc[i]["Countries"] == j:
+        result["Countries"]=country_confirmed.iloc[i]["Countries"]
+        result["Confirmed cases"]=country_confirmed.iloc[i]["Confirmed"]
+        break
+    for i in range(len(country_death)):
+      if country_confirmed.iloc[i]["Countries"] == j:
+        result["Deaths"]=country_death.iloc[i]["Death"]
+        break
+    for i in range(len(country_recovered)):
+      if country_recovered.iloc[i]["Countries"] == j:
+        result["Recovered"]=country_recovered.iloc[i]["Recovered"]
+        break
+    bar_chart_countries.append(result)
+    
+
+  bar_plot_data = pd.DataFrame(bar_chart_countries)
+  layout = go.Layout(autosize=False,width=500,height=500,xaxis= go.layout.XAxis(linecolor = 'black',linewidth = 1,mirror = True),yaxis= go.layout.YAxis(linecolor = 'black',linewidth = 1,mirror = True),margin=go.layout.Margin(l=50,r=50,b=100,t=100,pad = 4))
+  fig = go.Figure(data=[
+    go.Bar(name='Confirmed', x=bar_plot_data['Countries'], y=bar_plot_data['Confirmed cases']),
+    go.Bar(name='Recovered', x=bar_plot_data['Countries'], y=bar_plot_data['Recovered']),
+    go.Bar(name='Deaths', x=bar_plot_data['Countries'], y=bar_plot_data['Deaths'])],
+    layout=layout)
+  fig.update_layout(
+        title=f'Overall comparison',
+        xaxis_tickfont_size=12,
+        yaxis=dict(title="No. of people",titlefont_size=16,tickfont_size=14,),
+        legend=dict(x=0.70,y=1.00),
+        barmode='group',
+        bargap=0.15, 
+        bargroupgap=0.1)
+  viz1.plotly_chart(fig)
+
 if dashboard_options == option_2:
   st.title(option_2)
   st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
@@ -334,34 +377,33 @@ if dashboard_options == option_3:
         date=str(date[1])+"-"+str(int(date[-1])-1)+"-"+str(date[0])
     url = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv"
     data=fetch_data(url)
-    data=data[data["country_region"]=="India"]
-    data=data.sort_values(by="confirmed",ascending=False)
-    states=st.multiselect("Select States",list(data["province_state"]),default=list(data["province_state"])[:5])
-    state_data=[]
-    for i in states:
-      for j in range(len(data)):
-        if i == data.iloc[j]["province_state"]:
-          state_data.append(dict(data.iloc[j]))
-    state_data=pd.DataFrame(state_data).sort_values("confirmed",ascending=False)
-
-    st.sidebar.write(f"Last Updated: **{last_update(date,2)}**")
-    st.sidebar.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
-    if states:
-      viz1,viz2=st.beta_columns(2)
-      fig = px.pie(state_data, values=state_data['confirmed'], names=state_data['province_state'], title=f'Total Confirmed Cases',width=500,height=500)
-      viz2.plotly_chart(fig)
-      layout = go.Layout(autosize=False,width=500,height=500,xaxis= go.layout.XAxis(linecolor = 'black',linewidth = 1,mirror = True),yaxis= go.layout.YAxis(linecolor = 'black',linewidth = 1,mirror = True),margin=go.layout.Margin(l=50,r=50,b=100,t=100,pad = 4))
-      fig = go.Figure(data=[
-        go.Bar(name='Confirmed', x=state_data['province_state'], y=state_data['confirmed']),
-        go.Bar(name='Recovered', x=state_data['province_state'], y=state_data['recovered']),
-        go.Bar(name='Active', x=state_data['province_state'], y=state_data['active'])],
-        layout=layout)
-      fig.update_layout(
-        title=f'Overall comparison',
-        xaxis_tickfont_size=12,
-        yaxis=dict(title="No. of people",titlefont_size=16,tickfont_size=14,),
-        legend=dict(x=0.70,y=1.00),
-        barmode='group',
-        bargap=0.15, 
-        bargroupgap=0.1)
-      viz1.plotly_chart(fig)
+  data=data[data["country_region"]=="India"]
+  data=data.sort_values(by="confirmed",ascending=False)
+  states=st.multiselect("Select States",list(data["province_state"]),default=list(data["province_state"])[:5])
+  state_data=[]
+  for i in states:
+    for j in range(len(data)):
+      if i == data.iloc[j]["province_state"]:
+        state_data.append(dict(data.iloc[j]))
+  state_data=pd.DataFrame(state_data).sort_values("confirmed",ascending=False)
+  st.sidebar.write(f"Last Updated: **{last_update(date,2)}**")
+  st.sidebar.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
+  if states:
+    viz1,viz2=st.beta_columns(2)
+    fig = px.pie(state_data, values=state_data['confirmed'], names=state_data['province_state'], title=f'Total Confirmed Cases',width=500,height=500)
+    viz2.plotly_chart(fig)
+    layout = go.Layout(autosize=False,width=500,height=500,xaxis= go.layout.XAxis(linecolor = 'black',linewidth = 1,mirror = True),yaxis= go.layout.YAxis(linecolor = 'black',linewidth = 1,mirror = True),margin=go.layout.Margin(l=50,r=50,b=100,t=100,pad = 4))
+    fig = go.Figure(data=[
+      go.Bar(name='Confirmed', x=state_data['province_state'], y=state_data['confirmed']),
+      go.Bar(name='Recovered', x=state_data['province_state'], y=state_data['recovered']),
+      go.Bar(name='Active', x=state_data['province_state'], y=state_data['active'])],
+      layout=layout)
+    fig.update_layout(
+      title=f'Overall comparison',
+      xaxis_tickfont_size=12,
+      yaxis=dict(title="No. of people",titlefont_size=16,tickfont_size=14,),
+      legend=dict(x=0.70,y=1.00),
+      barmode='group',
+      bargap=0.15, 
+      bargroupgap=0.1)
+    viz1.plotly_chart(fig)
