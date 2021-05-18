@@ -284,6 +284,9 @@ if dashboard_options == option_1:
         bargap=0.15, 
         bargroupgap=0.1)
   viz1.plotly_chart(fig)
+  fig = px.pie(bar_plot_data, values=bar_plot_data['Confirmed cases'], names=bar_plot_data['Countries'], title=f'Total Confirmed Cases',width=500,height=500)
+  viz2.plotly_chart(fig)
+
 
 if dashboard_options == option_2:
   st.title(option_2)
