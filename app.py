@@ -105,13 +105,11 @@ def get_vaccination(date,pincode,fee,age):
   date=str(date).split("-")
   date=date[-1]+"-"+date[1]+"-"+date[0]
   ua = UserAgent()
-  #header = {'User-Agent':"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"}
+  header = {'User-Agent':"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"}
   st.write(date,pincode)
   try:
-    url=f"https://rnpy9drz65.execute-api.ap-south-1.amazonaws.com/test/covid?date={date}&pincode={pincode}"
-    data=requests.get(url)
+    data=requests.get(f"https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}",headers=header)
     data = data.json()
-    data["sessions"]=data["body"]["sessions"]
   except:
     st.warning("This website is hosted on the Heroku European Free server. For security reasons, The Offical Indian Gov API (Cowin) is blocking the request from outside of India. So The vaccination functionality is not working on the live website.")
     return "No"
