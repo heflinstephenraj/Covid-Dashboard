@@ -105,10 +105,13 @@ def get_vaccination(date,pincode,fee,age):
   date=str(date).split("-")
   date=date[-1]+"-"+date[1]+"-"+date[0]
   ua = UserAgent()
-  header = {'User-Agent':str(ua.chrome)}
+  #header = {'User-Agent':"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"}
+  st.write(date,pincode)
   try:
-    data=requests.get(f"https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}",headers=header)
+    url=f"https://rnpy9drz65.execute-api.ap-south-1.amazonaws.com/test/covid?date={date}&pincode={pincode}"
+    data=requests.get(url)
     data = data.json()
+    data["sessions"]=data["body"]["sessions"]
   except:
     st.warning("This website is hosted on the Heroku European Free server. For security reasons, The Offical Indian Gov API (Cowin) is blocking the request from outside of India. So The vaccination functionality is not working on the live website.")
     return "No"
@@ -286,7 +289,7 @@ if dashboard_options == option_1:
   viz1.plotly_chart(fig)
   fig = px.pie(bar_plot_data, values=bar_plot_data['Confirmed cases'], names=bar_plot_data['Countries'], title=f'Total Confirmed Cases',width=500,height=500)
   viz2.plotly_chart(fig)
-
+  
 
 if dashboard_options == option_2:
   st.title(option_2)
