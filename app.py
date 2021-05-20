@@ -49,11 +49,11 @@ def new_cases_global(data,days=False,column_name=None):
   new_cases_data.index= pd.to_datetime(new_cases_data.index)
   return new_cases_data
 
-option_1,option_2,option_3 = "Covid Global dashboard","Covid Vaccination (India)","Covid Inida dashboard"
+option_1,option_2,option_3 = "Covid Global dashboard","Covid Vaccination (India)","Covid India dashboard"
 dashboard_options = st.sidebar.selectbox("How would you like to be contacted?",(option_1,option_2,option_3))
 
 if dashboard_options == option_1:
-  st.title("Covid Dashboard")
+  st.title(option_1)
   column_1 , column_2 , column_3 , column_4 = st.beta_columns((2, 1, 1, 1))
   col1 , col2 ,col3  = st.beta_columns(3)
   st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
@@ -73,15 +73,18 @@ def format_as_indian(value):
 
 @st.cache
 def fetch_data(url):
-  data = pd.read_csv(url)
-  columns = []
-  for i in list(data.columns):
-    if i.lower() == "long" or i.lower() == "long_":
-      columns.append("lon")
-    else:
-      columns.append(i.lower())
-  data.columns=columns
-  return data
+  try:
+    data = pd.read_csv(url)
+    columns = []
+    for i in list(data.columns):
+      if i.lower() == "long" or i.lower() == "long_":
+        columns.append("lon")
+      else:
+        columns.append(i.lower())
+    data.columns=columns
+    return data
+  except:
+    return 0
 
 def last_update(data,option=1):
   monthDict = {"1":'January', "2":'February',"3": 'March',"4": 'April', "5":'May',"6":'June', "7":'July', "8":'August', "9":'September', "10":'October', "11":'November',"12":'December'}
@@ -130,6 +133,11 @@ def get_vaccination(date,pincode,fee,age):
   if not final:
     return "No"
   return final
+
+def delete_day(date):
+  date=date.split("-")
+  date=str(date[0])+"-"+str(int(date[1])-1)+"-"+str(date[-1])
+  return date
 
 def new_data(data,days=False,column_name=None):
   if not days:
@@ -224,10 +232,10 @@ if dashboard_options == option_1:
   
   col1.subheader("New confirmed cases")
   col1.write(format_as_indian(int(abs(sum(confirmed[confirmed.columns[-2]]) - sum(confirmed[confirmed.columns[-1]]) ))))
-  col2.subheader("New deaths")
-  col2.write(format_as_indian(int(abs(sum(death[death.columns[-2]]) - sum(death[death.columns[-1]]) ))))
-  col3.subheader("New recoveries")
-  col3.write(format_as_indian(int(abs(sum(recovered[recovered.columns[-2]]) - sum(recovered[recovered.columns[-1]]) ))))
+  col3.subheader("New deaths")
+  col3.write(format_as_indian(int(abs(sum(death[death.columns[-2]]) - sum(death[death.columns[-1]]) ))))
+  col2.subheader("New recoveries")
+  col2.write(format_as_indian(int(abs(sum(recovered[recovered.columns[-2]]) - sum(recovered[recovered.columns[-1]]) ))))
   st.sidebar.write('Recovered cases for the US are not provided from JHU. [Click here](https://github.com/CSSEGISandData/COVID-19/issues/3464) to read about it.')
   no_days = st.slider("No. of days", min_value=5, max_value=len(new_cases_global(confirmed)), value=60)
   
@@ -331,7 +339,7 @@ if dashboard_options == option_2:
     st.table(pd.DataFrame(vaccination_list,index=range(1,len(vaccination_list)+1)))   
 
 if dashboard_options == option_3:
-  st.title("Covid India dashboard")
+  st.title(option_3)
   st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
   
   confirmed = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
@@ -346,12 +354,12 @@ if dashboard_options == option_3:
   col1.subheader("New confirmed cases")
   new_cases_data=new_data(confirmed,len(confirmed))
   col1.write(format_as_indian(int(new_cases_data.loc[new_cases_data.index[-1]])))
-  col2.subheader("New deaths")
+  col3.subheader("New deaths")
   new_deaths_data=new_data(death,len(confirmed))
-  col2.write(format_as_indian(int(new_deaths_data.loc[new_deaths_data.index[-1]])))
-  col3.subheader("New recoveries")
+  col3.write(format_as_indian(int(new_deaths_data.loc[new_deaths_data.index[-1]])))
+  col2.subheader("New recoveries")
   new_recovered_data=new_data(recovered,len(confirmed))
-  col3.write(format_as_indian(int(new_recovered_data.loc[new_recovered_data.index[-1]])))
+  col2.write(format_as_indian(int(new_recovered_data.loc[new_recovered_data.index[-1]])))
   
   no_days_in = st.slider("No. of days", min_value=5, max_value=len(new_data(confirmed)), value=60)
 
@@ -370,19 +378,19 @@ if dashboard_options == option_3:
   new_cases_data=new_data(recovered,no_days_in,"New recoveries")
   st.write(f"New recovered cases from **{start_date}** to **{end_date}** ({no_days_in} days)")
   chart = st.line_chart(new_cases_data)
-  try:
-    date=str(datetime.datetime.now()).split(" ")[0].split("-")
-    date=date[1]+"-"+date[-1]+"-"+date[0]
+  date=str(datetime.datetime.now()).split(" ")[0].split("-")
+  date=date[1]+"-"+date[-1]+"-"+date[0]
+  i=1
+  st.write("Actual date: "+date)
+  while i:
     url = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv"
     data=fetch_data(url)
-  except:
-    date=str(datetime.datetime.now()).split(" ")[0].split("-")
-    if len(str(int(date[-1])+1)) == 1:
-        date=str(date[1])+"-"+"0"+str(int(date[-1])+1)+"-"+str(date[0])
-    else:    
-        date=str(date[1])+"-"+str(int(date[-1])-1)+"-"+str(date[0])
-    url = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv"
-    data=fetch_data(url)
+    if "0" == str(data):
+      date = delete_day(date)
+      url = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv"
+      data=fetch_data(url)
+    else:
+      i=0
   data=data[data["country_region"]=="India"]
   data=data.sort_values(by="confirmed",ascending=False)
   states=st.multiselect("Select States",list(data["province_state"]),default=list(data["province_state"])[:5])
