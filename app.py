@@ -2,8 +2,8 @@ from hashlib import new
 from os.path import join
 from time import time_ns
 from altair.vegalite.v4.schema.channels import Color
+from altair.vegalite.v4.schema.core import Header
 import numpy as np
-from fake_useragent.utils import get
 import streamlit as st
 import pandas as pd
 import datetime
@@ -100,17 +100,21 @@ def last_update(data,option=1):
       last_update = data.split("-")[1]+" "+monthDict[str(int(month))]+" 20"+data.split("-")[-1]
     return last_update
 
-def get_vaccination(date,pincode,fee,age):
+def get_vaccination(date,fee,age,pincode=None,district_id=None):
   if age == '18-45':
     age_select = 18
   else:
     age_select = 45
   date=str(date).split("-")
   date=date[-1]+"-"+date[1]+"-"+date[0]
-  ua = UserAgent()
+  
   header = {'User-Agent':"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"}
   try:
-    data=requests.get(f"https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}",headers=header)
+    if pincode:
+      data=requests.get(f"https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}",headers=header)
+    else:
+      
+      data=requests.get(f"https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?district_id={district_id}&date={date}",headers=header)
     data = data.json()
   except:
     st.warning("This website is hosted on the Heroku European Free server. For security reasons, The Offical Indian Gov API (Cowin) is blocking the request from outside of India. So The vaccination functionality is not working on the live website.")
@@ -304,26 +308,64 @@ if dashboard_options == option_1:
     bar_plot_data, values=bar_plot_data['Confirmed cases'], names=bar_plot_data['Countries'],
     title=f'Total Confirmed Cases',width=500,height=500)
   viz2.plotly_chart(fig)
-  st.write(bar_plot_data)
   
   
 if dashboard_options == option_2:
+  
   st.title(option_2)
+  
   st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
   
-  col1 , col2 ,col3, col4  = st.beta_columns(4)
-  
-  pincode = col3.text_input("Enter the pincode","600071")
-  date=col1.date_input("Select the date")
-  fee=col2.radio("Fees type",["All","Free","Paid"])
-  age = col4.radio('Age limit',('45+','18-45'))
-  vaccination=get_vaccination(date,pincode,fee,age)
+  col1 , col2 ,col3 = st.beta_columns(3)
+  find_by = col1.radio("Find vaccination availability by",["Pincode","District"])
+  date=col2.date_input("Select the date")
+  fee=col1.radio("Fees type",["All","Free","Paid"])
+  if find_by == "Pincode":
+    pincode = col3.text_input("Enter the pincode","600071")
+    age = col3.radio('Age limit',('45+','18-45'))
+    selected_state=None
+    selected_district=None
+    vaccination=get_vaccination(date=date,fee=fee,age=age,pincode=pincode)
+  else:
+    header = {'User-Agent':"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"}
+    states = requests.get("https://cdn-api.co-vin.in/api/v2/admin/location/states",headers=header).json()
+    states_name = []
+    for i in states["states"]:
+      if i["state_name"] not in states_name:
+        states_name.append(i["state_name"])
+
+    selected_state = col3.selectbox("Choose your state",states_name)
+    for i in states["states"]:
+      if selected_state == i["state_name"]:
+        state_id = i["state_id"]
+        break
+    district = requests.get(f"https://cdn-api.co-vin.in/api/v2/admin/location/districts/{state_id}",headers=header).json()
+    district_name = []
+    for i in district["districts"]:
+      if i["district_name"] not in district_name:
+        district_name.append(i["district_name"])
+    
+    selected_district = col3.selectbox("Choose your district",district_name)
+
+    for i in district["districts"]:
+      if selected_district == i["district_name"]:
+        district_id = i["district_id"]
+        break
+    pincode=None
+    age = col2.radio('Age limit',('45+','18-45'))
+    vaccination=get_vaccination(date=date,fee=fee,age=age,district_id=district_id)
 
   if vaccination == "No":
     if fee == "All":
-      st.warning(f"No vaccination centers are avaliable for {age} years old people at {pincode} on {date}.")
+      if pincode:
+        st.warning(f"No vaccination centers are avaliable for {age} years old people at {pincode} on {date}.")
+      else:
+        st.warning(f"No vaccination centers are avaliable for {age} years old people at {selected_district} on {date}.")
     else:
-      st.warning(f"No {fee.lower()} vaccination centers are avaliable for {age} years old people at {pincode} on {date}.")
+      if pincode:
+        st.warning(f"No {fee.lower()} vaccination centers are avaliable for {age} years old people at {pincode} on {date}.")
+      else:
+        st.warning(f"No {fee.lower()} vaccination centers are avaliable for {age} years old people at {selected_district} on {date}.")
   else:
     vaccination_list = []
     for i in vaccination:
@@ -444,3 +486,5 @@ if dashboard_options == option_3:
     st.write("**Case fatality ratio (CFR)** is the proportion of individuals diagnosed with a disease who die from that disease and is therefore a measure of severity among detected cases.")
     st.image("cfr.png")
     st.table(pd.DataFrame(case_fatality_ratio,index=range(1,len(case_fatality_ratio)+1)))
+st.sidebar.write(r"""### Wanna get in touch with me?
+Send me a message at [here](https://www.heflin.dev/hello).""")
