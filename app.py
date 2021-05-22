@@ -236,7 +236,7 @@ if dashboard_options == option_1:
   col3.write(format_as_indian(int(abs(sum(death[death.columns[-2]]) - sum(death[death.columns[-1]]) ))))
   col2.subheader("New recoveries")
   col2.write(format_as_indian(int(abs(sum(recovered[recovered.columns[-2]]) - sum(recovered[recovered.columns[-1]]) ))))
-  st.sidebar.write('Recovered cases for the US are not provided from JHU. [Click here](https://github.com/CSSEGISandData/COVID-19/issues/3464) to read about it.')
+  st.sidebar.write('**Active cases and Recovered cases** for the US are not provided from JHU. [Click here](https://github.com/CSSEGISandData/COVID-19/issues/3464) to read about it.')
   no_days = st.slider("No. of days", min_value=5, max_value=len(new_cases_global(confirmed)), value=60)
   
   new_cases_data=new_cases_global(confirmed,no_days,"New cases")
@@ -260,34 +260,57 @@ if dashboard_options == option_1:
   country_death =  country_wise_data(death,"Death",False)
   country_recovered =  country_wise_data(recovered,"Recovered",False)
   bar_chart_countries = []
-  
+  date=str(datetime.datetime.now()).split(" ")[0].split("-")
+  date=date[1]+"-"+date[-1]+"-"+date[0]
+  i=1
+  while i:
+    url = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv"
+    data=fetch_data(url)
+    if "0" == str(data):
+      date = delete_day(date)
+      url = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv"
+      data=fetch_data(url)
+    else:
+      i=0
+  data=data.fillna(0)
   for j in selected_countries:
     result={}
     for i in range(len(country_confirmed)):
       if country_confirmed.iloc[i]["Countries"] == j:
         result["Countries"]=country_confirmed.iloc[i]["Countries"]
+        result["Confirmed cases_IN"]=format_as_indian(int(country_confirmed.iloc[i]["Confirmed"]))
         result["Confirmed cases"]=country_confirmed.iloc[i]["Confirmed"]
         break
     for i in range(len(country_death)):
       if country_confirmed.iloc[i]["Countries"] == j:
         result["Deaths"]=country_death.iloc[i]["Death"]
+        result["Deaths_IN"]=format_as_indian(int(country_death.iloc[i]["Death"]))
         break
     for i in range(len(country_recovered)):
       if country_recovered.iloc[i]["Countries"] == j:
         result["Recovered"]=country_recovered.iloc[i]["Recovered"]
-        break
+        result["Recovered_IN"]=format_as_indian(int(country_recovered.iloc[i]["Recovered"]))
+        break 
+     
+    sum_=sum(data[data["country_region"]==j]["active"])
+    result["active"]=sum_
+    result["active_in"]=format_as_indian(int(sum_))
     bar_chart_countries.append(result)
     
 
   bar_plot_data = pd.DataFrame(bar_chart_countries)
+  bar_plot_data = bar_plot_data.fillna(0)
   layout = go.Layout(autosize=False,width=500,height=500,xaxis= go.layout.XAxis(linecolor = 'black',linewidth = 1,mirror = True),yaxis= go.layout.YAxis(linecolor = 'black',linewidth = 1,mirror = True),margin=go.layout.Margin(l=50,r=50,b=100,t=100,pad = 4))
+  
+  
+
   fig = go.Figure(data=[
-    go.Bar(name='Confirmed', x=bar_plot_data['Countries'], y=bar_plot_data['Confirmed cases']),
-    go.Bar(name='Recovered', x=bar_plot_data['Countries'], y=bar_plot_data['Recovered']),
-    go.Bar(name='Deaths', x=bar_plot_data['Countries'], y=bar_plot_data['Deaths'])],
+    go.Bar(name='Confirmed', x=bar_plot_data['Countries'], y=bar_plot_data['Confirmed cases'],textposition='auto',text=bar_plot_data['Confirmed cases_IN']),
+    go.Bar(name='Recovered', x=bar_plot_data['Countries'], y=bar_plot_data['Recovered'],textposition='auto',text=bar_plot_data['Recovered_IN']),
+    go.Bar(name='Deaths', x=bar_plot_data['Countries'], y=bar_plot_data['Deaths'],textposition='auto',text=bar_plot_data['Deaths_IN'])],
     layout=layout)
   fig.update_layout(
-        title=f'Overall comparison',
+        title=f'Total cases',
         xaxis_tickfont_size=12,
         yaxis=dict(title="No. of people",titlefont_size=16,tickfont_size=14,),
         legend=dict(x=0.70,y=1.00),
@@ -295,10 +318,25 @@ if dashboard_options == option_1:
         bargap=0.15, 
         bargroupgap=0.1)
   viz1.plotly_chart(fig)
-  fig = px.pie(bar_plot_data, values=bar_plot_data['Confirmed cases'], names=bar_plot_data['Countries'], title=f'Total Confirmed Cases',width=500,height=500)
+  fig = px.pie(
+    bar_plot_data, values=bar_plot_data['Confirmed cases'], names=bar_plot_data['Countries'],
+    title=f'Total Confirmed Cases',width=500,height=500)
   viz2.plotly_chart(fig)
+  bar_plot_data=bar_plot_data.sort_values("active",ascending=False)
+  fig = go.Figure(data=[
+    go.Bar(name='Active Cases', x=bar_plot_data['Countries'], textposition='auto', y=bar_plot_data['active'],text=bar_plot_data['active_in'])],
+    layout=layout)
+  fig.update_layout(
+        title=f'Active Cases',
+        xaxis_tickfont_size=12,
+        yaxis=dict(title="No. of people",titlefont_size=16,tickfont_size=14,),
+        legend=dict(x=0.70,y=1.00),
+        barmode='group',
+        bargap=0.15, 
+        bargroupgap=0.1)
+  viz1.plotly_chart(fig)
   
-
+  
 if dashboard_options == option_2:
   st.title(option_2)
   st.sidebar.write('Developed with ❤ by [Heflin Stephen Raj S](https://www.heflin.dev/)')
@@ -371,17 +409,17 @@ if dashboard_options == option_3:
   st.write(f"New confirmed cases from **{start_date}** to **{end_date}** ({no_days_in} days)")
   chart = st.line_chart(new_cases_data)
 
-  new_cases_data=new_data(death,no_days_in,"New deaths")
+  new_deaths_data=new_data(death,no_days_in,"New deaths")
   st.write(f"New deaths from **{start_date}** to **{end_date}** ({no_days_in} days)")
-  chart = st.line_chart(new_cases_data)
+  chart = st.line_chart(new_deaths_data)
 
-  new_cases_data=new_data(recovered,no_days_in,"New recoveries")
+  new_recoveries_data=new_data(recovered,no_days_in,"New recoveries")
   st.write(f"New recovered cases from **{start_date}** to **{end_date}** ({no_days_in} days)")
-  chart = st.line_chart(new_cases_data)
+  chart = st.line_chart(new_recoveries_data)
+
   date=str(datetime.datetime.now()).split(" ")[0].split("-")
   date=date[1]+"-"+date[-1]+"-"+date[0]
   i=1
-  st.write("Actual date: "+date)
   while i:
     url = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv"
     data=fetch_data(url)
@@ -392,14 +430,22 @@ if dashboard_options == option_3:
     else:
       i=0
   data=data[data["country_region"]=="India"]
+  
   data=data.sort_values(by="confirmed",ascending=False)
-  states=st.multiselect("Select States",list(data["province_state"]),default=list(data["province_state"])[:5])
+  states=st.multiselect("Select States",list(data["province_state"]),default=list(data["province_state"])[:4])
   state_data=[]
   for i in states:
     for j in range(len(data)):
       if i == data.iloc[j]["province_state"]:
         state_data.append(dict(data.iloc[j]))
   state_data=pd.DataFrame(state_data).sort_values("confirmed",ascending=False)
+  state_data=state_data.fillna(0)
+  for j in ["active","deaths","confirmed","recovered"]:
+    index_in = j+"_IN"
+    add=[]
+    for i in range(len(state_data)):
+      add.append(format_as_indian(int(state_data.iloc[i][j])))
+    state_data[index_in]=add
   st.sidebar.write(f"Last Updated: **{last_update(date,2)}**")
   st.sidebar.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
   if states:
@@ -408,12 +454,13 @@ if dashboard_options == option_3:
     viz2.plotly_chart(fig)
     layout = go.Layout(autosize=False,width=500,height=500,xaxis= go.layout.XAxis(linecolor = 'black',linewidth = 1,mirror = True),yaxis= go.layout.YAxis(linecolor = 'black',linewidth = 1,mirror = True),margin=go.layout.Margin(l=50,r=50,b=100,t=100,pad = 4))
     fig = go.Figure(data=[
-      go.Bar(name='Confirmed', x=state_data['province_state'], y=state_data['confirmed']),
-      go.Bar(name='Recovered', x=state_data['province_state'], y=state_data['recovered']),
-      go.Bar(name='Active', x=state_data['province_state'], y=state_data['active'])],
+      go.Bar(name='Confirmed', x=state_data['province_state'], y=state_data['confirmed'],textposition='auto',text=state_data['confirmed_IN']),
+      go.Bar(name='Recovered', x=state_data['province_state'], y=state_data['recovered'],textposition='auto',text=state_data['recovered_IN']),
+      go.Bar(name='Deaths', x=state_data['province_state'], y=state_data['deaths'],textposition='auto',text=state_data['deaths_IN']),
+      go.Bar(name='Active', x=state_data['province_state'], y=state_data['active'],textposition='auto',text=state_data['active_IN'])],
       layout=layout)
     fig.update_layout(
-      title=f'Overall comparison',
+      title=f'Total cases',
       xaxis_tickfont_size=12,
       yaxis=dict(title="No. of people",titlefont_size=16,tickfont_size=14,),
       legend=dict(x=0.70,y=1.00),
@@ -421,3 +468,9 @@ if dashboard_options == option_3:
       bargap=0.15, 
       bargroupgap=0.1)
     viz1.plotly_chart(fig)
+    case_fatality_ratio=[]
+    for i in range(len(state_data)):
+      case_fatality_ratio.append({"State":state_data.iloc[i]["province_state"],"Case fatality ratio":state_data.iloc[i]["case_fatality_ratio"]})
+    st.write("**Case fatality ratio (CFR)** is the proportion of individuals diagnosed with a disease who die from that disease and is therefore a measure of severity among detected cases.")
+    st.image("cfr.png")
+    st.table(pd.DataFrame(case_fatality_ratio,index=range(1,len(case_fatality_ratio)+1)))
