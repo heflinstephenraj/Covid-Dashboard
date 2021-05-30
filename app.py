@@ -51,8 +51,6 @@ def new_cases_global(data,days=False,column_name=None):
 option_1,option_2,option_3 = "Covid Global dashboard","Covid Vaccination (India)","Covid India dashboard"
 dashboard_options = st.sidebar.selectbox("How would you like to be contacted?",(option_1,option_2,option_3))
 
-if st.sidebar.button("Reload data"):
-  caching.clear_cache()
 
 if dashboard_options == option_1:
   st.title(option_1)
@@ -506,3 +504,5 @@ if dashboard_options == option_3:
     st.table(pd.DataFrame(case_fatality_ratio,index=range(1,len(case_fatality_ratio)+1)))
 st.sidebar.write(r"""### Wanna get in touch with me?
 Send me a message at [here](https://www.heflin.dev/hello).""")
+if st.sidebar.button("Reload data"):
+  caching.clear_cache()
