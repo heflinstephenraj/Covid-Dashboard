@@ -9,6 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import requests
 import datetime 
+from streamlit import caching
 
 
 st.set_page_config(page_title="Covid Dashboard", page_icon="🕸", layout='wide', initial_sidebar_state='expanded')
@@ -49,6 +50,9 @@ def new_cases_global(data,days=False,column_name=None):
 
 option_1,option_2,option_3 = "Covid Global dashboard","Covid Vaccination (India)","Covid India dashboard"
 dashboard_options = st.sidebar.selectbox("How would you like to be contacted?",(option_1,option_2,option_3))
+
+if st.sidebar.button("Reload data"):
+  caching.clear_cache()
 
 if dashboard_options == option_1:
   st.title(option_1)
