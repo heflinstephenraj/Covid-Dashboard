@@ -86,6 +86,11 @@ def fetch_data(url):
   except:
     return 0
 
+@st.cache
+def get_data(url):
+  data = pd.read_csv(url)
+  return data
+
 def last_update(data,option=1):
   monthDict = {"1":'January', "2":'February',"3": 'March',"4": 'April', "5":'May',"6":'June', "7":'July', "8":'August', "9":'September', "10":'October', "11":'November',"12":'December'}
   if option == 1:
@@ -199,6 +204,20 @@ def bar_chart_countries_fig(data,title,xaxis,yaxis,column):
     go.Bar(
          x=data['Countries'][:no_of_coutires],
          y=data[last_updated_date][:no_of_coutires]
+        )])
+    fig.update_layout(
+    title=title,
+    xaxis_tickfont_size=12,
+    xaxis=dict(title=xaxis,titlefont_size=16),
+    yaxis=dict(title=yaxis,titlefont_size=16))
+    return fig
+
+def bar_chart_countries_fig_IN(data,title,xaxis,yaxis,column,no_of_state):
+    data=data.sort_values(column,ascending=False)
+    fig = go.Figure(data=[
+    go.Bar(
+         x=data['province_state'][:no_of_state],
+         y=data[column][:no_of_state]
         )])
     fig.update_layout(
     title=title,
@@ -502,7 +521,26 @@ if dashboard_options == option_3:
     st.write("**Case fatality ratio (CFR)** is the proportion of individuals diagnosed with a disease who die from that disease and is therefore a measure of severity among detected cases.")
     st.image("cfr.png")
     st.table(pd.DataFrame(case_fatality_ratio,index=range(1,len(case_fatality_ratio)+1)))
+    for i in range(10):
+      try:
+        date = datetime.datetime.now() - datetime.timedelta(1)
+        date = date.strftime("%m-%d-%Y")
+        covid_global = fetch_data(f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv")
+        
+        break
+      except:
+        pass
+    covid_in = covid_global[covid_global["country_region"]=="India"]
+    
+    no_of_state = st.slider("Select No. of states to show in below bar charts", min_value=2, max_value=len(set(covid_in["province_state"])), value=15)
+    st.plotly_chart(bar_chart_countries_fig_IN(covid_in,title="Total Confirmed Cases",xaxis="Countries",yaxis="No. of people",column="confirmed",no_of_state=no_of_state))
+    st.plotly_chart(bar_chart_countries_fig_IN(covid_in,title="Total Deaths",xaxis="Countries",yaxis="No. of people",column="deaths",no_of_state=no_of_state))
+    st.plotly_chart(bar_chart_countries_fig_IN(covid_in,title="Total Active cases",xaxis="Countries",yaxis="No. of people",column="active",no_of_state=no_of_state))
+    st.plotly_chart(bar_chart_countries_fig_IN(covid_in,title="Total recoveries",xaxis="Countries",yaxis="No. of people",column="recovered",no_of_state=no_of_state))
+
 st.sidebar.write(r"""### Wanna get in touch with me?
 Send me a message at [here](https://www.heflin.dev/hello).""")
+
+
 if st.sidebar.button("Reload data"):
   caching.clear_cache()
