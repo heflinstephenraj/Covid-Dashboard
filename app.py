@@ -318,7 +318,7 @@ if dashboard_options == option_1:
     title=f'Total Confirmed Cases',width=500,height=500)
   viz2.plotly_chart(fig)
   
-  no_of_coutires = st.slider("No. of countires", min_value=2, max_value=len(set(country_confirmed["Countries"])), value=50)
+  no_of_coutires = st.slider("Select No. of countries to show in below bar charts ", min_value=2, max_value=len(set(country_confirmed["Countries"])), value=50)
   
   st.plotly_chart(bar_chart_countries_fig(country_confirmed,title="Total Confirmed Cases",xaxis="Countries",yaxis="No. of people",column="Confirmed"))
   st.plotly_chart(bar_chart_countries_fig(country_death,title="Total Deaths",xaxis="Countries",yaxis="No. of people",column="Death"))
