@@ -1,8 +1,6 @@
 from hashlib import new
 from os.path import join
 from time import time_ns
-from altair.vegalite.v4.schema.channels import Color
-from altair.vegalite.v4.schema.core import Header
 import numpy as np
 import streamlit as st
 import pandas as pd
@@ -11,7 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import requests
 import datetime 
-from fake_useragent import UserAgent
+
 
 st.set_page_config(page_title="Covid Dashboard", page_icon="🕸", layout='wide', initial_sidebar_state='expanded')
 
@@ -192,29 +190,40 @@ def convert_date(date,option):
       date = date[-1]+" "+monthDict[str(int(date[1]))]+" "+date[0]
       return date
 
+#bar chart function
+def bar_chart_countries_fig(data,title,xaxis,yaxis,column):
+    last_updated_date=column
+    fig = go.Figure(data=[
+    go.Bar(
+         x=data['Countries'][:no_of_coutires],
+         y=data[last_updated_date][:no_of_coutires]
+        )])
+    fig.update_layout(
+    title=title,
+    xaxis_tickfont_size=12,
+    xaxis=dict(title=xaxis,titlefont_size=16),
+    yaxis=dict(title=yaxis,titlefont_size=16))
+    return fig
+
 def country_wise_data(data,column,format_IN=True):
-    countries_list = []
-    total_cases_list = []
-    for i in data["country/region"]:
-        if i not in countries_list:
-            countries_list.append(i)
-            if "combined_key" in data.columns: 
-              total_cases_list.append(sum(data[data["combined_key"] == i][data.columns[-1]]))
-            else:
-              total_cases_list.append(sum(data[data["country/region"] == i][data.columns[-1]]))
-    country_wise_total_cases=pd.DataFrame(total_cases_list ,columns=[column], index=countries_list)
-    country_wise_total_cases["Countries"] = country_wise_total_cases.index
-    country_wise_total_cases=country_wise_total_cases.sort_values(column,ascending=False)
-    country_wise_total_cases.index = range(1,len(country_wise_total_cases)+1)
-    first_column = country_wise_total_cases.pop(column)
-    country_wise_total_cases.insert(1, column, first_column)
-    for i in country_wise_total_cases.index:
-      if format_IN:
-        in_format = format_as_indian(country_wise_total_cases[column][i])
-      else:
-        in_format=country_wise_total_cases[column][i]
-      country_wise_total_cases[column][i] = in_format
-    return country_wise_total_cases
+    last_updated_date=data.columns[-1]
+    if format_IN:
+      counrty_wise_data = data.groupby('country/region').agg({ last_updated_date:'sum'}).reset_index().sort_values(last_updated_date,ascending=False)
+      counrty_wise_data.columns =["Countries",column]
+      final_data = []
+      for i in range(len(counrty_wise_data)):
+        add={
+          column:format_as_indian(counrty_wise_data.iloc[i][column]),
+          "Countries":counrty_wise_data.iloc[i]["Countries"]
+        }
+        final_data.append(add)
+      final_data_In = pd.DataFrame(final_data)
+      return final_data_In
+    else:
+      counrty_wise_data = data.groupby('country/region').agg({ last_updated_date:'sum'}).reset_index().sort_values(last_updated_date,ascending=False)
+      counrty_wise_data.columns =["Countries",column]
+    return counrty_wise_data
+
 
 if dashboard_options == option_1 or dashboard_options == option_3:
   confirmed = fetch_data("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
@@ -309,7 +318,12 @@ if dashboard_options == option_1:
     title=f'Total Confirmed Cases',width=500,height=500)
   viz2.plotly_chart(fig)
   
+  no_of_coutires = st.slider("No. of countires", min_value=2, max_value=len(set(country_confirmed["Countries"])), value=50)
   
+  st.plotly_chart(bar_chart_countries_fig(country_confirmed,title="Total Confirmed Cases",xaxis="Countries",yaxis="No. of people",column="Confirmed"))
+  st.plotly_chart(bar_chart_countries_fig(country_death,title="Total Deaths",xaxis="Countries",yaxis="No. of people",column="Death"))
+  st.plotly_chart(bar_chart_countries_fig(country_recovered,title="Total Recoveries",xaxis="Countries",yaxis="No. of people",column="Recovered"))
+
 if dashboard_options == option_2:
   
   st.title(option_2)
