@@ -8,7 +8,7 @@ import datetime
 import plotly.express as px
 import plotly.graph_objects as go
 import requests
-import datetime 
+
 from streamlit import caching
 
 
@@ -124,10 +124,13 @@ def get_vaccination(date,fee,age,pincode=None,district_id=None):
   except:
     st.warning("This website is hosted on the Heroku European Free server. For security reasons, The Offical Indian Gov API (Cowin) is blocking the request from outside of India. So The vaccination functionality is not working on the live website.")
     return "No"
+  if "sessions" not in data:
+    st.warning("This website is hosted on the Heroku European Free server. For security reasons, The Offical Indian Gov API (Cowin) is blocking the request from outside of India. So The vaccination functionality is not working on the live website.")
+    return "No"
   if "error" in data.keys():
     st.warning(data["error"])
     return "No"
-  if not data["sessions"]:
+  if  not data["sessions"]:
     return "No"
   final = []
   for i in data["sessions"]:
@@ -144,8 +147,9 @@ def get_vaccination(date,fee,age,pincode=None,district_id=None):
   return final
 
 def delete_day(date):
-  date=date.split("-")
-  date=str(date[0])+"-"+str(int(date[1])-1)+"-"+str(date[-1])
+  date= datetime.datetime.strptime(date, '%m-%d-%Y')
+  date=date- datetime.timedelta(hours=24)
+  date=date.strftime('%d-%m-%Y')
   return date
 
 def new_data(data,days=False,column_name=None):
@@ -464,8 +468,7 @@ if dashboard_options == option_3:
   st.write(f"New recovered cases from **{start_date}** to **{end_date}** ({no_days_in} days)")
   chart = st.bar_chart(new_recoveries_data)
 
-  date=str(datetime.datetime.now()).split(" ")[0].split("-")
-  date=date[1]+"-"+date[-1]+"-"+date[0]
+  date=datetime.datetime.now().strftime('%d-%m-%Y')
   i=1
   while i:
     url = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{date}.csv"
