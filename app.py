@@ -1,4 +1,3 @@
-from hashlib import new
 from os.path import join
 import numpy as np
 import streamlit as st
