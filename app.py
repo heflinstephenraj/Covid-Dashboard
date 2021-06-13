@@ -145,7 +145,7 @@ def get_vaccination(date,fee,age,pincode=None,district_id=None):
   return final
 
 def delete_day(date):
-  date= datetime.datetime.strptime(date, '%m-%d-%Y')
+  date= datetime.datetime.strptime(date, '%d-%m-%Y')
   date=date- datetime.timedelta(hours=24)
   date=date.strftime('%d-%m-%Y')
   return date
