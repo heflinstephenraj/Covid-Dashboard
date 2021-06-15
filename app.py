@@ -494,7 +494,7 @@ if dashboard_options == option_3:
     for i in range(len(state_data)):
       add.append(format_as_indian(int(state_data.iloc[i][j])))
     state_data[index_in]=add
-  st.sidebar.write(f"Last Updated: **{last_update(date,2)}**")
+  st.sidebar.write(f"Last Updated: **{end_date}**")
   st.sidebar.write('Data is obtained from [JHU](https://github.com/CSSEGISandData/COVID-19)')
   if states:
     viz1,viz2=st.beta_columns(2)
