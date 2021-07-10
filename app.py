@@ -130,6 +130,16 @@ def get_vaccination(date,fee,age,pincode=None,district_id=None):
     return "No"
   if  not data["sessions"]:
     return "No"
+  
+  check = []
+  
+  for i in data["sessions"]:
+    if i["available_capacity"]:
+      check.append(i)
+  data["sessions"] = check
+  if  not data["sessions"]:
+    return "No"
+
   final = []
   for i in data["sessions"]:
     if fee != "All":
